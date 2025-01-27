@@ -43,7 +43,7 @@ class Session:
         _dictionary (str): Storage of private data for this session
         _message (str): The last message sent to the agent by this session
         _predicted_intent (IntentClassifierPrediction): The last predicted intent for this session
-        _image_prediction (ImagePrediction): The last detected objects for this session
+        _image_prediction (ImagePrediction): The last image prediction for this session
         _file (File or None): The last file sent to the agent.
         flags (dict[str, bool]): A dictionary of boolean flags.
             A `predicted_intent flag` is set to true when an intent is received. When the evaluation of the

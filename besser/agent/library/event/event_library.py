@@ -8,7 +8,7 @@ value, trigger the transitions.
 from typing import Any, Callable, TYPE_CHECKING
 
 from besser.agent.core.intent.intent import Intent
-from besser.agent.core.image.image_object import ImageObject
+from besser.agent.core.image.image_entity import ImageEntity
 
 if TYPE_CHECKING:
     from besser.agent.core.scenario.scenario import Scenario
@@ -82,8 +82,8 @@ def file_received(session: 'Session', event_params: dict) -> bool:
     return False
 
 
-def image_object_detected(session: 'Session', event_params: dict) -> bool:
-    """This event checks if a specific ImageObject was detected in an Object Detection Prediction with a minimum
+def image_entity_detected(session: 'Session', event_params: dict) -> bool:
+    """This event checks if a specific ImageEntity was detected in an Object Detection Prediction with a minimum
     confidence score.
 
     Args:
@@ -91,14 +91,14 @@ def image_object_detected(session: 'Session', event_params: dict) -> bool:
         event_params (dict): the event parameters
 
     Returns:
-        bool: True if the target ImageObject was detected in the Object Detection, with a score higher than the
+        bool: True if the target ImageEntity was detected in the Object Detection, with a score higher than the
             specified in the event parameters
     """
     if session.flags['image_prediction']:
-        target_image_object: ImageObject = event_params['image_object']
-        target_score: ImageObject = event_params['score']
+        target_image_entity: ImageEntity = event_params['image_entity']
+        target_score: float = event_params['score']
         for image_object_prediction in session.image_prediction.image_object_predictions:
-            if image_object_prediction.image_object == target_image_object and image_object_prediction.score >= target_score:
+            if image_object_prediction.image_entity == target_image_entity and image_object_prediction.score >= target_score:
                 return True
     return False
 

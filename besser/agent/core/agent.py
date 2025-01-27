@@ -9,7 +9,7 @@ from besser.agent.core.image.image_property import ImageProperty
 from besser.agent.core.message import Message
 from besser.agent.core.scenario.scenario import Scenario
 from besser.agent.core.transition import Transition
-from besser.agent.core.image.image_object import ImageObject
+from besser.agent.core.image.image_entity import ImageEntity
 from besser.agent.cv.cv_engine import CVEngine
 from besser.agent.core.entity.entity import Entity
 from besser.agent.core.intent.intent import Intent
@@ -22,7 +22,7 @@ from besser.agent.core.file import File
 from besser.agent.db import DB_MONITORING
 from besser.agent.db.monitoring_db import MonitoringDB
 from besser.agent.exceptions.exceptions import AgentNotTrainedError, DuplicatedEntityError, DuplicatedInitialStateError, \
-    DuplicatedIntentError, DuplicatedStateError, InitialStateNotFound, DuplicatedImageObjectError, \
+    DuplicatedIntentError, DuplicatedStateError, InitialStateNotFound, DuplicatedImageEntityError, \
     DuplicatedScenarioError, DuplicatedImagePropertyError
 from besser.agent.exceptions.logger import logger
 from besser.agent.nlp.intent_classifier.intent_classifier_configuration import IntentClassifierConfiguration, \
@@ -55,7 +55,7 @@ class Agent:
         states (list[State]): The agent states
         intents (list[Intent]): The agent intents
         entities (list[Entity]): The agent entities
-        image_objects (list[ImageObject]): The agent image objects
+        image_entities (list[ImageEntity]): The agent image entities
         image_properties (list[ImageProperty]): The agent image properties
         global_initial_states (list[State, Intent]): List of tuples of initial global states and their triggering intent
         global_state_component (dict[State, list[State]]): Dictionary of global state components, where key is initial
@@ -65,7 +65,6 @@ class Agent:
     """
 
     def __init__(self, name: str):
-        print('CREANDO AGENTEEEEEEEEEEEEEE')
         self._name: str = name
         self._platforms: list[Platform] = []
         self._platforms_threads: list[threading.Thread] = []
@@ -79,7 +78,7 @@ class Agent:
         self.states: list[State] = []
         self.intents: list[Intent] = []
         self.entities: list[Entity] = []
-        self.image_objects: list[ImageObject] = []
+        self.image_entities: list[ImageEntity] = []
         self.image_properties: list[ImageProperty] = []
         self.scenarios: list[Scenario] = []
         self.global_initial_states: list[tuple[State, Intent]] = []
@@ -262,47 +261,45 @@ class Agent:
         self.entities.append(new_entity)
         return new_entity
 
-    def new_image_object(self, name: str, description: str or None = None) -> ImageObject:
-        """Create a new image object in the agent.
+    def new_image_entity(self, name: str, attributes: dict[str, Any] = {}) -> ImageEntity:
+        """Create a new image entity in the agent.
 
         Args:
-            name (str): the image object name. It must be unique in the agent
-            description (str or None): a description of the image object, optional
+            name (str): the image entity name. It must be unique in the agent
 
         Returns:
-            ImageObject: the image object
+            ImageEntity: the image entity
         """
-        new_image_object = ImageObject(name, description)
-        if new_image_object in self.image_objects:
-            raise DuplicatedImageObjectError(self, new_image_object)
-        self.image_objects.append(new_image_object)
-        return new_image_object
+        new_image_entity = ImageEntity(name, attributes)
+        if new_image_entity in self.image_entities:
+            raise DuplicatedImageEntityError(self, new_image_entity)
+        self.image_entities.append(new_image_entity)
+        return new_image_entity
 
-    def get_image_object(self, name: str) -> ImageObject or None:
-        """Get an image object of the agent.
+    def get_image_entity(self, name: str) -> ImageEntity or None:
+        """Get an image entity of the agent.
 
         Args:
-            name (str): the image object name
+            name (str): the image entity name
 
         Returns:
-            ImageObject or None: the image object, or None if it does not exist
+            ImageEntity or None: the image entity, or None if it does not exist
         """
-        for image_object in self.image_objects:
-            if image_object.name == name:
-                return image_object
+        for image_entity in self.image_entities:
+            if image_entity.name == name:
+                return image_entity
         return None
 
-    def new_image_property(self, name: str, description: str or None = None) -> ImageProperty:
+    def new_image_property(self, name: str, attributes: dict[str, Any] = {}) -> ImageProperty:
         """Create a new image property in the agent.
 
         Args:
             name (str): the image property name. It must be unique in the agent
-            description (str or None): a description of the image, optional
 
         Returns:
             ImageProperty: the image property
         """
-        new_image_property = ImageProperty(name, description)
+        new_image_property = ImageProperty(name, attributes)
         if new_image_property in self.image_properties:
             raise DuplicatedImagePropertyError(self, new_image_property)
         self.image_properties.append(new_image_property)

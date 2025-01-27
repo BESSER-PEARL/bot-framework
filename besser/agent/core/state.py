@@ -6,13 +6,13 @@ from besser.agent.core.intent.intent import Intent
 from besser.agent.core.scenario.scenario import Scenario
 from besser.agent.core.session import Session
 from besser.agent.core.transition import Transition
-from besser.agent.core.image.image_object import ImageObject
+from besser.agent.core.image.image_entity import ImageEntity
 from besser.agent.cv.prediction.image_prediction import ImagePrediction
 from besser.agent.exceptions.exceptions import BodySignatureError, ConflictingAutoTransitionError, \
     DuplicatedIntentMatchingTransitionError, EventSignatureError, IntentNotFound, StateNotFound
 from besser.agent.exceptions.logger import logger
 from besser.agent.library.event.event_library import auto, intent_matched, variable_matches_operation, file_received, \
-    image_object_detected, scenario_matched
+    image_entity_detected, scenario_matched
 from besser.agent.library.event.event_template import event_template
 from besser.agent.library.intent.intent_library import fallback_intent
 from besser.agent.library.state.state_library import default_body, default_fallback_body
@@ -281,24 +281,25 @@ class State:
         self.transitions.append(Transition(name=self._t_name(), source=self, dest=dest, event=variable_matches_operation,
                                            event_params=event_params))
 
-    def when_image_object_detected_go_to(
+    def when_image_entity_detected_go_to(
             self,
-            image_object: ImageObject,
+            image_entity: ImageEntity,
             score: float,
             dest: 'State'
     ) -> None:
-        """Create a new `image object detected` transition on this state.
+        """Create a new `image entity detected` transition on this state.
 
-        When the agent is in a state and receives an image, the CVEngine will be in charge of detecting objects.
-        If the transition event is to receive a specific image object that was detected by the agent, it will move to the
+        When the agent is in a state and receives an image, the CVEngine will be in charge of detecting entities.
+        If the transition event is to receive a specific image entity that was detected by the agent, it will move to the
         transition's destination state.
 
         Args:
-            image_object (ImageObject): the image object
+            image_entity (ImageEntity): the image entity
+            score (float): the minimum confidence score of the detected image entity
             dest (State): the destination state
         """
-        event_params = {'image_object': image_object, 'score': score}
-        self.transitions.append(Transition(name=self._t_name(), source=self, dest=dest, event=image_object_detected,
+        event_params = {'image_entity': image_entity, 'score': score}
+        self.transitions.append(Transition(name=self._t_name(), source=self, dest=dest, event=image_entity_detected,
                                            event_params=event_params))
 
     def when_scenario_matched_go_to(
@@ -385,7 +386,7 @@ class State:
         """
         image_prediction: ImagePrediction = session.image_prediction
         if image_prediction is None:
-            logging.error("Something went wrong, no image prediction was stored in the session")
+            logger.error("Something went wrong, no image prediction was stored in the session")
             return
         for transition in self.transitions:  # TODO: ONLY CHECK OBJECT DETECTION TRANSITIONS???
             if transition.is_event_true(session):

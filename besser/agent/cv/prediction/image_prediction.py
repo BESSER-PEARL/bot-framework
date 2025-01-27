@@ -3,15 +3,15 @@ import json
 
 import numpy as np
 
-from besser.agent.core.image.image_object import ImageObject
+from besser.agent.core.image.image_entity import ImageEntity
 from besser.agent.core.image.image_property import ImageProperty
 
 
 class ImageObjectPrediction:
-    """The prediction result of an ObjectDetector for a specific ImageObject.
+    """The prediction result of an ObjectDetector for a specific ImageEntity.
 
     Args:
-        image_object (ImageObject):
+        image_entity (ImageEntity): the image entity that was detected by an ObjectDetector
         score (float): the prediction score (between 0 and 1)
         model_name (str): the name of the model that made the object detection
         x1 (int): the x1 coordinate of the object's bounding box
@@ -20,7 +20,7 @@ class ImageObjectPrediction:
         y2 (int): the y2 coordinate of the object's bounding box
 
     Attributes:
-        image_object (ImageObject):
+        image_entity (ImageEntity): the image entity that was detected by an ObjectDetector
         score (float): the prediction score (between 0 and 1)
         model_name (str): the name of the model that made the object detection
         x1 (int): the x1 coordinate of the object's bounding box
@@ -29,8 +29,8 @@ class ImageObjectPrediction:
         y2 (int): the y2 coordinate of the object's bounding box
     """
 
-    def __init__(self, image_object: ImageObject, score: float, model_name: str, x1: int, y1: int, x2: int, y2: int):
-        self.image_object: ImageObject = image_object
+    def __init__(self, image_entity: ImageEntity, score: float, model_name: str, x1: int, y1: int, x2: int, y2: int):
+        self.image_entity: ImageEntity = image_entity
         self.score: float = score
         self.model_name: str = model_name
         self.x1: int = x1
@@ -90,7 +90,7 @@ class ImagePrediction:
         """
         image_object_predictions: list[ImageObjectPrediction] = []
         for image_object_prediction in self.image_object_predictions:
-            if image_object_prediction.image_object.name == name:
+            if image_object_prediction.image_entity.name == name:
                 image_object_predictions.append(image_object_prediction)
         return image_object_predictions
 
@@ -123,7 +123,7 @@ class ImagePredictionEncoder(json.JSONEncoder):
             }
             for image_object_prediction in obj.image_object_predictions:
                 image_prediction_dict['image_object_predictions'].append({
-                    'name': image_object_prediction.image_object.name,
+                    'name': image_object_prediction.image_entity.name,
                     'score': image_object_prediction.score,
                     'x1': image_object_prediction.x1,
                     'x2': image_object_prediction.x2,

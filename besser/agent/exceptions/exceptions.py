@@ -41,10 +41,10 @@ class DuplicatedEntityError(Exception):
         super().__init__(message)
 
 
-class DuplicatedImageObjectError(Exception):
+class DuplicatedImageEntityError(Exception):
 
-    def __init__(self, agent, image_object):
-        message = f"Agent '{agent.name}' already contains an image object with name '{image_object.name}'"
+    def __init__(self, agent, image_entity):
+        message = f"Agent '{agent.name}' already contains an image entity with name '{image_entity.name}'"
         super().__init__(message)
 
 

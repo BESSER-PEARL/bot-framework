@@ -56,8 +56,8 @@ class VLLMOpenAI(VLLM):
                  "satisfied in the image (some properties may provide a description).\n"
         for image_property in self._cv_engine._agent.image_properties:
             image_property_string = f"- {image_property.name}"
-            if image_property.description:
-                image_property_string += f": {image_property.description}"
+            if image_property.has_attribute('description'):
+                image_property_string += f": {image_property.get_attribute_value('description')}"
             prompt += image_property_string + "\n"
         messages = [{
             "role": "user",

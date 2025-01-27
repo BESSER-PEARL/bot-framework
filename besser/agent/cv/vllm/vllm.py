@@ -1,4 +1,3 @@
-import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -6,6 +5,7 @@ import numpy as np
 
 from besser.agent.core.image.image_property import ImageProperty
 from besser.agent.cv.prediction.image_prediction import ImagePropertyPrediction
+from besser.agent.exceptions.logger import logger
 
 if TYPE_CHECKING:
     from besser.agent.cv.cv_engine import CVEngine
@@ -60,7 +60,7 @@ class VLLM(ABC):
         Returns:
             list[ImagePropertyPrediction]: the image property predictions
         """
-        logging.warning(f'predict_image_properties not implemented in {self.__class__.__name__}')
+        logger.warning(f'predict_image_properties not implemented in {self.__class__.__name__}')
         return []
 
     def default_json_to_image_property_predictions(self, response_json: dict) -> list[ImagePropertyPrediction]:
