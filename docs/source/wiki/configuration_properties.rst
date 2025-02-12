@@ -76,6 +76,22 @@ Telegram Platform
 
 .. _properties-database:
 
+GitHub Platform
+------------------
+
+.. automodule:: besser.agent.platforms.github
+   :members:
+
+.. _properties-database:
+
+GitLab Platform
+------------------
+
+.. automodule:: besser.agent.platforms.gitlab
+   :members:
+
+.. _properties-database:
+
 Database
 --------
 

@@ -33,3 +33,5 @@ Table of contents
 
    platforms/websocket_platform
    platforms/telegram_platform
+   platforms/github_platform
+   platforms/gitlab_platform

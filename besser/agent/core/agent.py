@@ -1,3 +1,4 @@
+import asyncio
 import operator
 import threading
 from configparser import ConfigParser
@@ -24,6 +25,8 @@ from besser.agent.nlp.nlp_engine import NLPEngine
 from besser.agent.platforms.platform import Platform
 from besser.agent.platforms.telegram.telegram_platform import TelegramPlatform
 from besser.agent.platforms.websocket.websocket_platform import WebSocketPlatform
+from besser.agent.platforms.github.github_platform import GitHubPlatform
+from besser.agent.platforms.gitlab.gitlab_platform import GitLabPlatform
 
 
 class Agent:
@@ -36,6 +39,8 @@ class Agent:
         _name (str): The agent name
         _platforms (list[Platform]): The agent platforms
         _platforms_threads (list[threading.Thread]): The threads where the platforms are run
+        _event_loop (asyncio.EventLoop): The event loop managing external events
+        _event_thread (threading.Thread): The thread where the event loop is run
         _nlp_engine (NLPEngine): The agent NLP engine
         _config (ConfigParser): The agent configuration parameters
         _default_ic_config (IntentClassifierConfiguration): the intent classifier configuration used by default for the
@@ -57,6 +62,8 @@ class Agent:
         self._name: str = name
         self._platforms: list[Platform] = []
         self._platforms_threads: list[threading.Thread] = []
+        self._event_loop: asyncio.EventLoop or None = None
+        self._event_thread: threading.Thread or None = None
         self._nlp_engine = NLPEngine(self)
         self._config: ConfigParser = ConfigParser()
         self._default_ic_config: IntentClassifierConfiguration = SimpleIntentClassifierConfiguration()
@@ -289,6 +296,38 @@ class Agent:
             thread.join()
         self._platforms_threads = []
 
+    def _run_event_thread(self) -> None:
+        """Start the thread managing external events"""
+        self._event_loop = asyncio.new_event_loop()
+
+        def manage_events(loop: asyncio.AbstractEventLoop) -> None:
+            for session in self._sessions.values():
+                if session.events and len(session.events) != 0:
+                    session.flags['event'] = True
+                    session.current_state.receive_event(session)
+            loop.call_later(1,manage_events, loop)
+
+        def start_event_loop():
+            logger.debug('Starting Event Loop')
+            asyncio.set_event_loop(self._event_loop)
+            asyncio.get_event_loop().call_soon(manage_events, self._event_loop)
+            self._event_loop.run_forever()
+            logger.debug('Event Loop stopped')
+
+
+
+
+        thread = threading.Thread(target=start_event_loop)
+        self._event_thread = thread
+        thread.start()
+
+    def _stop_event_thread(self) -> None:
+        """Stop the thread managing external events"""
+        self._event_loop.stop()
+        self._event_thread.join()
+        self._event_loop = None
+        self._event_thread = None
+
     def run(self, train: bool = True, sleep: bool = True) -> None:
         """Start the execution of the agent.
 
@@ -307,6 +346,7 @@ class Agent:
             if self._monitoring_db.connected:
                 self._monitoring_db.initialize_db()
         self._run_platforms()
+        self._run_event_thread()
         if sleep:
             idle = threading.Event()
             while True:
@@ -321,6 +361,7 @@ class Agent:
         """Stop the agent execution."""
         logger.info(f'Stopping agent {self._name}')
         self._stop_platforms()
+        self._stop_event_thread()
         if self.get_property(DB_MONITORING) and self._monitoring_db.connected:
             self._monitoring_db.close_connection()
 
@@ -379,6 +420,19 @@ class Agent:
         session.file = file
         logger.info('Received file')
         session.current_state.receive_file(session)
+        
+        
+    def receive_event(self, event: Any) -> None:
+        """Receive an external event from a platform.
+
+        Receiving an event broadcast the message to all the sessions of the agent
+
+        Args:
+            event (Any): the received event
+        """
+        logger.info(f'Received event: {event}')
+        for session in self._sessions.values():
+            session.events.appendleft(event)
 
     def process(self, session: Session, message: Any, is_user_message: bool) -> Any:
         """Runs the agent processors in a message.
@@ -507,6 +561,26 @@ class Agent:
         telegram_platform = TelegramPlatform(self)
         self._platforms.append(telegram_platform)
         return telegram_platform
+    
+    def use_github_platform(self) -> GitHubPlatform:
+        """Use the :class:`~besser.agent.platforms.github.github_platform.GitHubPlatform` on this agent.
+
+        Returns:
+            GitHubPlatform: the GitHub platform
+        """
+        github_platform = GitHubPlatform(self)
+        self._platforms.append(github_platform)
+        return github_platform
+
+    def use_gitlab_platform(self) -> GitLabPlatform:
+        """Use the :class:`~besser.agent.platforms.gitlab.gitlab_platform.GitLabPlatform` on this agent.
+
+        Returns:
+            GitLabPlatform: the GitLab platform
+        """
+        gitlab_platform = GitLabPlatform(self)
+        self._platforms.append(gitlab_platform)
+        return gitlab_platform
 
     def _monitoring_db_insert_session(self, session: Session) -> None:
         """Insert a session record into the monitoring database.

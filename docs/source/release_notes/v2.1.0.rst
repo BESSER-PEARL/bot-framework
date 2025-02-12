@@ -1,0 +1,18 @@
+Version 2.1.0
+=============
+
+Changes
+-------
+
+New Features
+------------
+
+- Added GitHub and GitLab platforms
+- Trigger transition based on webhook events
+- Access event data to act accordingly
+- Open, get, comment, label or assign someone to an issue
+- Added full gidgethub and gidgetlab wrappers in the platforms
+
+Improvements
+------------
+ to define the classes to install the optional dependencies, homonymous to the new requirements files and including a class "all" that installs all the dependencies at once.

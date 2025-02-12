@@ -12,3 +12,5 @@ agents
    examples/llm_agent
    examples/rag_agent
    examples/telegram_agent
+   examples/github_agent
+   examples/gitlab_agent

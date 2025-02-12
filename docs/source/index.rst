@@ -79,3 +79,5 @@ Example agents
 - :doc:`examples/llm_agent`: Introducing :doc:`Large Language Models (LLMs) <wiki/nlp/llm>`
 - :doc:`examples/rag_agent`: Introducing :doc:`Retrieval Augmented Generation (RAG) <wiki/nlp/rag>`
 - :doc:`examples/telegram_agent`: Introducing the :doc:`wiki/platforms/telegram_platform`
+- :doc:`examples/stargazer_agent`: Introducing the :doc:`wiki/platforms/github_platform`
+- :doc:`examples/issue_thanking_agent`: Introducing the :doc:`wiki/platforms/gitlab_platform`

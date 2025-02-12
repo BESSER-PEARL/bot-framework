@@ -1,3 +1,6 @@
+aiohttp==3.11.12
+gidgethub==5.3.0
+gidgetlab==2.1.0
 dateparser==1.1.8
 langdetect==1.0.9
 nltk==3.9.1

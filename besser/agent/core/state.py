@@ -1,5 +1,6 @@
 import inspect
 import traceback
+from collections import deque
 from typing import Any, Callable, TYPE_CHECKING
 
 from besser.agent.core.intent.intent import Intent
@@ -174,10 +175,10 @@ class State:
             dest (State): the destination state
             event_params (dict): the parameters associated to the event
         """
-        event_signature = inspect.signature(event)
-        event_template_signature = inspect.signature(event_template)
-        if event_signature.parameters != event_template_signature.parameters:
-            raise EventSignatureError(self._agent, event, event_template_signature, event_signature)
+        # event_signature = inspect.signature(event)
+        # event_template_signature = inspect.signature(event_template)
+        # if event_signature.parameters != event_template_signature.parameters:
+        #     raise EventSignatureError(self._agent, event, event_template_signature, event_signature)
         for transition in self.transitions:
             if transition.is_auto():
                 raise ConflictingAutoTransitionError(self._agent, self)
@@ -351,6 +352,36 @@ class State:
             logger.error(f"An error occurred while executing '{self._fallback_body.__name__}' of state"
                           f"'{self._name}' in agent '{self._agent.name}'. See the attached exception:")
             traceback.print_exc()
+
+    def receive_event(self, session: Session) -> None:
+        """Receive an event from a user session.
+
+        When receiving an event it looks for the state's transition whose trigger event matches the first event.
+        If not we pop the current event and check for the next one.
+        The passed items are discarded, unless no transition is made.
+
+        Args:
+            session (Session): the user session that received the event
+        """
+        fallback_deque = deque()
+        while session.events:
+            for transition in self.transitions:
+                if transition.is_event_true(session):
+                    session.event = session.events.pop()
+                    session.flags['event'] = False
+                    session.move(transition)
+                    return
+            fallback_deque.appendleft(session.events.pop())
+        session.events.extend(fallback_deque)
+        session.flags['event'] = False
+
+        # When no transition is activated and the event not broadcasted, run the fallback body of the state
+        # logger.info(f"[{self._name}] Running fallback body {self._fallback_body.__name__}")
+        # try:
+        #     self._fallback_body(session)
+        # except Exception as _:
+        #     logger.error(f"An error occurred while executing '{self._fallback_body.__name__}' of state"
+        #                   f"'{self._name}' in agent '{self._agent.name}'. See the attached exception:")
 
     def _check_next_transition(self, session: Session) -> None:
         """Check whether the first defined transition of the state is an `auto` transition, and if so, move to its

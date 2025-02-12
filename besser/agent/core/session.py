@@ -1,6 +1,7 @@
 import json
 import threading
 import time
+from collections import deque
 from datetime import datetime
 from typing import Any, TYPE_CHECKING
 
@@ -43,6 +44,7 @@ class Session:
         _message (str): The last message sent to the agent by this session
         _predicted_intent (str): The last predicted intent for this session
         _file: File or None: The last file sent to the agent.
+        _event: Any or None: The last event to trigger a transition.
         flags (dict[str, bool]): A dictionary of boolean flags.
             A `predicted_intent flag` is set to true when an intent is received. When the evaluation of the
             current state's transitions is done, the flag is set to false. It may happen that a transition different
@@ -50,8 +52,10 @@ class Session:
             state, if there is a transition associated with the same intent, it should not be triggered as the time for
             this intent passed (unless the same intent is detected, in such case the flag will be set to true again).
             Another flag `file_flag` is used for the same purpose but for files sent by the user
+            Another flag `event_flag` is used for the same purpose but for external events
         agent_connections (dict[str, WebSocketApp]): WebSocket client connections to other agent's WebSocket platforms.
             These connections enable an agent to send messages to other agents.
+        _events: deque[Any]: The queue of received external events to process
     """
 
     def __init__(
@@ -68,11 +72,15 @@ class Session:
         self._message: str or None = None
         self._predicted_intent: IntentClassifierPrediction or None = None
         self._file: File or None = None
+        self._event: Any or None = None
         self.flags: dict[str, bool] = {
             'predicted_intent': False,
-            'file': False
+            'file': False,
+            'event': False
         }
         self.agent_connections: dict[str, WebSocketApp] = {}
+        self._events: deque[Any] = deque()
+
 
     @property
     def id(self):
@@ -122,6 +130,21 @@ class Session:
         self.flags['file'] = True
 
     @property
+    def event(self):
+        """str: The last event matched by the agent."""
+        return self._event
+
+    @event.setter
+    def event(self, event: Any):
+        """
+        Set the last event matched by the agent.
+        Args:
+            event (Any): the event to set in the session
+        """
+        # TODO: Event are not stored in the DB
+        self._event = event
+
+    @property
     def predicted_intent(self):
         """str: The last predicted intent for this session."""
         return self._predicted_intent
@@ -135,6 +158,11 @@ class Session:
         """
         self._predicted_intent = predicted_intent
         self.flags['predicted_intent'] = True
+
+    @property
+    def events(self):
+        """str: The queue of pending events for this session"""
+        return self._events
 
     def get_chat_history(self, n: int = None) -> list[Message]:
         """Get the history of messages between this session and its agent.
